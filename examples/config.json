@@ -1,0 +1,5 @@
+{
+  "metric_name": "synthetic_score",
+  "direction": "higher",
+  "representative_rule": "all"
+}

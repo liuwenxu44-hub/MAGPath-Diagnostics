@@ -1,0 +1,9 @@
+{
+  "event": "BINARY",
+  "probability_support": {"correct": "0.25", "incorrect": "0.75"},
+  "target": "incorrect",
+  "filter_scope": "all_declared_members",
+  "matching_definition": "declared_hand_authored_event",
+  "score_definition": "BRIER",
+  "request_aurc": true
+}

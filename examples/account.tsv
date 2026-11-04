@@ -1,0 +1,3 @@
+contig_id	length_bp	candidate_bin_id	assignment_status	reason_code
+c1	100	b1	ASSIGNED	EXPLICIT_BIN
+c2	50		UNBINNED	EXPLICIT_UNBINNED

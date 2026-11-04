@@ -1,0 +1,8 @@
+{
+  "source_id": "hand_authored_portable_demo_v1",
+  "evidence_type": "SYNTHETIC_MECHANICAL_FIXTURE_NOT_BIOLOGICAL_TRUTH",
+  "universe": [{"contig_id": "c1", "length_bp": 100}, {"contig_id": "c2", "length_bp": 50}],
+  "left_scores": {"s1": "0.6", "s2": "0.7"},
+  "right_scores": {"s1": "0.8", "s2": "0.7"},
+  "expectation": "Same declared scope, one retained score change and one strict pair reversal."
+}

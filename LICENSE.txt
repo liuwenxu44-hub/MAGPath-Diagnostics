@@ -1,0 +1,62 @@
+MAGPath Diagnostics Noncommercial No-Modification License 1.0
+4 November 2026
+
+Copyright (c) 2026 Wenxu Liu. All rights reserved except as expressly granted below.
+
+1. Covered material
+
+This license applies only to the licensor-controlled MAGPath Diagnostics code,
+accompanying documentation, and self-authored synthetic examples identified in
+SOURCE_INVENTORY.tsv. The underlying software is v0.3.2-candidate. It does not
+license third-party software, dependencies, research datasets, retired labels,
+private validation answers, personal information, or institutional trademarks.
+Third-party material remains governed by its own terms.
+
+2. Free noncommercial use
+
+Permission is granted, without charge, to obtain, inspect, install, run, and make
+copies reasonably necessary for the recipient's own noncommercial use of the
+covered, unmodified material. This permission is available to any researcher or
+other recipient for a noncommercial purpose; no registration, individual request,
+or material-transfer agreement is required for this permitted use.
+
+Noncommercial use is use not primarily directed toward commercial advantage or
+monetary compensation. Selling the software, providing a paid software-based
+service, and using it in commercial product or service development are prohibited
+without separate written permission. An institutional affiliation alone does not
+determine whether a particular activity is noncommercial.
+
+3. No modification or onward distribution
+
+Recipients may not modify the covered source, create adaptations or derivative
+software versions, sublicense it, or redistribute or mirror the covered material
+without separate written permission from the licensor, except where applicable
+law grants rights that cannot be excluded.
+
+Selecting documented command-line options and local paths, supplying independently
+created inputs and configuration files, and generating normal outputs are ordinary
+operation, not prohibited source modification. Technically necessary artifacts
+automatically produced by ordinary execution are permitted. This does not grant
+permission to alter the supplied original code, documentation, or fixtures.
+
+4. Notices and independent outputs
+
+Retain this license and the supplied copyright and version notices with permitted
+copies. Do not represent an altered or independently produced program as the
+licensor's verified version. This license does not claim ownership of a user's
+independent inputs, scientific findings, or ordinary generated results. Rights in
+any protected material reproduced in an output continue to apply. Publication of
+research results does not grant a right to redistribute the software or operate
+it commercially.
+
+5. Warranty and reserved rights
+
+The material is supplied as is, without a promise of support, scientific accuracy,
+fitness for a particular purpose, or other warranty, to the extent permitted by
+applicable law. No patent or trademark license is granted. Mandatory statutory
+rights are unaffected. Rights not expressly granted remain reserved.
+
+This is a custom restricted-use software license, not an OSI open-source license.
+It does not impose these restrictions on public-domain material or independent
+third-party rights. Separate written permission may authorize uses outside its
+scope. Preparing this licensed copy does not itself publish or upload the software.

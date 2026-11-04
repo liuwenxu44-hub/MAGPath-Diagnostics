@@ -1,0 +1,32 @@
+{
+  "version": "0.3.2-candidate",
+  "publication_tag": "v0.3.2-public.1",
+  "code_changes": false,
+  "files": [
+    {
+      "path": "alignment_diagnostics.py",
+      "bytes": 13848,
+      "sha256": "533770ceb889867af3cc3baa6bc11c719134d77815107ec3cdbae23c58901bce"
+    },
+    {
+      "path": "diagnostic_cli.py",
+      "bytes": 32572,
+      "sha256": "252237190375deafac0e43df09beca4f4732212e762da1056df9e628ef88656a"
+    },
+    {
+      "path": "make_native_example.py",
+      "bytes": 2662,
+      "sha256": "29fc72c5709073cc750f8417ea8c8b659e572dc20f63f0f380a9b279598881d9"
+    },
+    {
+      "path": "native_artifacts.py",
+      "bytes": 34684,
+      "sha256": "d4aa70c767c0a9967c925698862c4336a904a7930d30c3c649e65b1952d3fa95"
+    }
+  ],
+  "public_license_selected": true,
+  "public_distribution_authorized": true,
+  "new_scientific_analysis": false,
+  "historical_validation_regraded": false,
+  "inventory": "SOURCE_INVENTORY.tsv"
+}

@@ -1,0 +1,16 @@
+{
+  "dataset_id": "synthetic_dataset", "family_id": "arbitrary_new_family", "assembly_id": "synthetic_assembly",
+  "policy_id": "declared_policy", "weighting": "BASE_PAIRS", "matching": "MANY_TO_ONE",
+  "score_event": "DECLARED_CORRECT_ASSIGNMENT", "filter_definition": "all_declared_members",
+  "provenance": {"source_id": "hand_authored_portable_demo_v1", "sha256": "04b529406e5448001e4e94d1f27db8c44d63b7b0186327b71ccc404cff54118e"},
+  "declared_totals": {"records": 2, "bp": 150},
+  "members": [{"contig_id": "c1", "length_bp": 100}, {"contig_id": "c2", "length_bp": 50}],
+  "target_map": [
+    {"submission_id": "s1", "candidate_bin_id": "bin1", "truth_id": "t1"},
+    {"submission_id": "s2", "candidate_bin_id": "bin2", "truth_id": "t1"}
+  ],
+  "results": [
+    {"submission_id": "s1", "method": "alpha", "version": "1", "workflow_id": "wf1", "score": "0.8"},
+    {"submission_id": "s2", "method": "beta", "version": "2", "workflow_id": "wf2", "score": "0.7"}
+  ]
+}
