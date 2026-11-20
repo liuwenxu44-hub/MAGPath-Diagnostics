@@ -15,7 +15,7 @@ from collections import Counter
 from decimal import Decimal, InvalidOperation, localcontext
 from pathlib import Path
 
-VERSION = '0.3.2-candidate'
+VERSION = '0.3.4'
 SCOPE_FIELDS = ('dataset_id', 'family_id', 'assembly_id', 'policy_id',
                 'weighting', 'matching', 'score_event', 'filter_definition')
 STATUSES = {'ASSIGNED', 'UNBINNED', 'TOOL_ABSTAIN', 'HARD_FAIL_INVALID_OUTPUT'}
@@ -268,6 +268,8 @@ def exact_delta(a, b):
 def diagnose_comparison(left: dict, right: dict, universe: list[dict] | None,
                         config: dict) -> dict:
     out = report('compare')
+    out['comparison_evidence_scope'] = 'GENERIC_DECLARATIONS_MEMBERS_LENGTHS_AND_SUPPLIED_MAPS'
+    out['reference_comparison'] = 'NOT_VERIFIABLE_NO_RECORD_LEVEL_REFERENCE_INPUT'
     if not isinstance(config, dict):
         issue(out, 'INVALID_CONFIG', 'config', 'Expected configuration object.')
         config = {}

@@ -16,8 +16,9 @@ def main():
         'truth.tsv': '@Version:0.9.0\n@SampleID:synthetic\n@@SEQUENCEID\tBINID\tLENGTH\na\tG1\t40\nb\tG1\t30\nc\tG2\t30\n',
         'query.tsv': '@Version:0.9.0\n@SampleID:synthetic\n@@SEQUENCEID\tBINID\na\tX\nc\tX\nb\tY\n',
         'results.tsv': 'Sample\tTool\tbinning type\taccuracy_bp\tpercentage_of_assigned_bps\tprecision_weighted_bp\nsynthetic\tquery\tgenome\t0.7\t1.0\t0.7\n',
-        'receipt.json': json.dumps({'exit_code': 0, 'source': 'AUTHOR_CREATED_SYNTHETIC_NATIVE_SHAPED_FIXTURE_NOT_AMBER_EXECUTION'}, indent=2) + '\n',
     }
+    files['receipt.json']=json.dumps({'exit_code':0,'source':'AUTHOR_CREATED_SYNTHETIC_NATIVE_SHAPED_FIXTURE_NOT_AMBER_EXECUTION',
+        'source_sha256':hashlib.sha256(files['results.tsv'].encode('utf-8')).hexdigest()},indent=2)+'\n'
     for name, content in files.items():
         with (out / name).open('x', encoding='utf-8', newline='') as f:
             f.write(content)

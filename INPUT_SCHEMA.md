@@ -1,6 +1,6 @@
 # Portable diagnostic schema v1
 
-Interfaces for the publicly distributed v0.3.2-candidate software. JSON inputs and TSV universe/accounting
+Interfaces for MAGPath Diagnostics v0.3.4. JSON inputs and TSV universe/accounting
 tables use the exact fields below. API accepts Python dictionaries/lists. No
 third-party dependency, model fitting, external tool execution or data download.
 

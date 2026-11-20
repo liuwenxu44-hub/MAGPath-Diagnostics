@@ -15,6 +15,7 @@ import re
 
 from diagnostic_cli import (SCOPE_FIELDS, VERSION, file_identity, nonempty,
                             read_json, read_tsv, report, validate_tsv_header)
+from evidence_identity import receipt_relation, comparison_plan, sample_relation
 
 TOLERANCE = Decimal('1e-12')
 AMBER_FIELDS = ('accuracy_bp', 'accuracy_seq', 'percentage_of_assigned_bps',
@@ -40,6 +41,26 @@ def membership_fingerprint(members):
     return dict(records=len(members), bp=str(sum(int(n) for n in members.values())),
                 id_length_sha256=digest.hexdigest(),
                 canonicalisation='UTF8_JSON_SORTED_ID_DECIMAL_INTEGER_LENGTH_PAIRS')
+
+
+def id_pairs_digest(pairs):
+    # Delimited JSON arrays remain unambiguous even when a label contains punctuation.
+    digest = hashlib.sha256()
+    for cid, group in pairs:
+        digest.update(json.dumps([cid, group], ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+        digest.update(b'\n')
+    return digest.hexdigest()
+
+
+def group_identity(labels):
+    """Record exact labelled groups AND their partition up to a one-to-one relabelling."""
+    ordered = sorted(labels)
+    first = {}
+    for cid in ordered:
+        first.setdefault(labels[cid], cid)
+    return dict(records=len(ordered), groups=len(first),
+                labelled=id_pairs_digest((cid, labels[cid]) for cid in ordered),
+                partition=id_pairs_digest((cid, first[labels[cid]]) for cid in ordered))
 
 
 def add(out, code, location, details, dimension='input', severity='ERROR'):
@@ -182,6 +203,7 @@ def process_audit(spec, base, out):
         add(out, 'INVALID_PROCESS_DECLARATION', 'process', 'Expected object.', 'process')
         return
     receipt, identity = load_file(process.get('receipt'), 'process.receipt', base, out, 'json', True)
+    out['_receipt_for_reconciliation'] = receipt
     if receipt is not None:
         code = receipt.get('exit_code') if isinstance(receipt, dict) else None
         if not isinstance(code, int) or isinstance(code, bool):
@@ -270,21 +292,28 @@ def amber_recompute(spec, selector, base, out):
         tid, length = uu[cid]
         masses['bp'][bid][tid] += length
         masses['seq'][bid][tid] += 1
-    calculated, mappings = {}, {}
+    # AMBER 2.0.8 GenomeQuery.compute_metrics selects a single maximal-bp row
+    # in its sort=False confusion table. For unique singleton witnesses its order
+    # is the filtered query order. A tied maximum takes the first encountered.
+    mapping = {bid: max(values, key=values.get) for bid, values in masses['bp'].items()}
+    ties = {bid: [tid for tid, n in values.items() if n == values[mapping[bid]]]
+            for bid, values in masses['bp'].items()
+            if sum(n == values[mapping[bid]] for n in values.values()) > 1}
+    calculated, mappings = {}, dict(bp=mapping, seq=mapping)
     for unit, denominator, assigned_mass in (
             ('bp', denom_bp, sum((uu[cid][1] for cid in assigned), Decimal(0))),
             ('seq', Decimal(len(uu)), Decimal(len(assigned)))):
-        mapping = {bid: min(values, key=lambda tid: (-values[tid], tid))
-                   for bid, values in masses[unit].items()}
         correct = sum((masses[unit][bid][tid] for bid, tid in mapping.items()), Decimal(0))
-        mappings[unit] = mapping
         calculated['accuracy_' + unit] = correct / denominator
         calculated['percentage_of_assigned_' + ('bps' if unit == 'bp' else 'seqs')] = assigned_mass / denominator
         calculated['precision_weighted_' + unit] = correct / assigned_mass if assigned_mass else None
     out['reconstruction'] = dict(universe_records=len(uu), universe_bp=str(denom_bp),
         assigned_records=len(assigned), assigned_bp=str(sum((uu[cid][1] for cid in assigned), Decimal(0))),
         omitted_ids=sorted(set(uu) - set(assigned)), excluded_by_length=sorted(set(truth_map) - set(uu)),
-        target_maps=mappings, minimum_length=minimum,
+        target_maps=mappings, minimum_length=minimum, bp_ties_in_query_order=ties,
+        reference_identity=group_identity({cid: row[0] for cid, row in uu.items()}),
+        query_identity=group_identity(assigned),
+        mapped_reference_by_contig=id_pairs_digest((cid, mapping[assigned[cid]]) for cid in sorted(assigned)),
         contract='STRICT_SINGLETON_TRUTH_UNIQUE_HARD_ASSIGNMENT_MANY_TO_ONE',
         membership_origin='SUPPLIED_TRUTH_BIOBOX_NOT_ORIGIN_AUTHENTICATED')
     out['reconstruction']['membership_fingerprints'] = dict(
@@ -432,6 +461,11 @@ def ber_recompute(spec, selector, source, base, out):
 
 
 def finish_native(out):
+    spec=out.pop('_spec_for_reconciliation',{})
+    receipt=out.pop('_receipt_for_reconciliation',None)
+    relation, issues=receipt_relation(receipt,out['source_files'],spec,out.get('process_exit_code'))
+    out['receipt_result_binding']=relation
+    out['issues'].extend(issues)
     errors = [x for x in out['issues'] if x['severity'] == 'ERROR']
     input_errors = [x for x in errors if x['dimension'] == 'input']
     evidence_missing = [x for x in out['issues'] if x['dimension'] == 'evidence']
@@ -459,12 +493,13 @@ def finish_native(out):
 
 def diagnose_artifact(spec, base=Path('.')):
     out = report('artifact')
+    out['_spec_for_reconciliation']=spec if isinstance(spec,dict) else {}
     out.update(source_files=[], source_fields=[], absolute_numeric_tolerance=str(TOLERANCE),
                source_identity_verification='ACTUAL_BYTES_VS_SUPPLIED_HASH_NOT_AUTHENTICATED',
                independent_witness_complete=False)
     out['comparison_scope'] = 'SINGLE_ARTIFACT_NO_PEER'
     out['limitations'].extend([
-        'Receipt/source association and closed artifact inventory are supplied declarations, not authenticated process provenance.',
+        'A receipt must bind the selected result bytes for COMPLETE. The match is evidence of consistency, not independent proof of who executed the job. Read the recorded exit and inventory separately when binding is unverified.',
         'AMBER numerical reconstruction supports six genome-level accuracy/assignment/precision fields only, strict unique hard assignments, positive integer lengths and minimum-length filtering.',
         'BER reconstruction verifies aggregate overlaps and declared many-to-one maps; it does not verify biological truth or contig-to-overlap provenance.'])
     if not isinstance(spec, dict):
@@ -477,6 +512,15 @@ def diagnose_artifact(spec, base=Path('.')):
     out['adapter'] = adapter
     if adapter not in ('AMBER_RESULTS_V2_0_8', 'BER_DECOMPOSITION_V1'):
         missing(out, 'adapter', 'Unsupported native adapter; no metric semantics inferred.')
+        # The metric parser is unavailable, but verified bytes already present in
+        # the required-output inventory can independently establish job/result identity.
+        source=spec.get('source')
+        if isinstance(source,dict) and nonempty(source.get('path')) and nonempty(source.get('sha256')):
+            path=(base / source['path']).resolve()
+            witnessed=next((f for f in out['source_files'] if f['role'].startswith('process.required_artifacts[')
+                            and Path(f['path']).resolve()==path and f['hash_status']=='MATCH'
+                            and source['sha256'].lower()==f['sha256']),None)
+            if witnessed:out['source_files'].append(dict(witnessed,role='source'))
         return finish_native(out)
     selector = spec.get('selector')
     keys = ('Sample', 'Tool', 'binning type') if adapter.startswith('AMBER') else ('family_id', 'submission_id')
@@ -556,13 +600,61 @@ def diagnose_artifact_pair(left_spec, right_spec, left_base=Path('.'), right_bas
     # alternatives, not intrinsically a changed target map for the same identity.
     lsel = left_spec.get('selector', {}) if isinstance(left_spec, dict) else {}
     rsel = right_spec.get('selector', {}) if isinstance(right_spec, dict) else {}
+    if not isinstance(lsel,dict):lsel={}
+    if not isinstance(rsel,dict):rsel={}
     # Keep unsupported-adapter refusals from the single-artifact audits; their
     # adapter value may be absent, null or non-string, not a string to inspect.
     left_adapter = left.get('adapter')
     is_amber = isinstance(left_adapter, str) and left_adapter.startswith('AMBER')
-    same_submission = (lsel.get('Tool') == rsel.get('Tool') if is_amber
+    amber_pair = is_amber and right.get('adapter') == left_adapter
+    lr, rr = left.get('reconstruction', {}), right.get('reconstruction', {})
+    lref, rref = lr.get('reference_identity'), rr.get('reference_identity')
+    lq, rq = lr.get('query_identity'), rr.get('query_identity')
+    same_eval = membership_verified and lf['evaluated'] == rf['evaluated']
+    out['reference_comparison'] = 'NOT_VERIFIABLE'
+    out['candidate_name_comparison'] = 'NOT_ASSESSED'
+    intent,ids=comparison_plan(left_spec,right_spec) if amber_pair else ('NOT_APPLICABLE',None)
+    out['prediction_comparison']={'purpose':intent,'submission_ids':ids,
+        'tool_display_names':[lsel.get('Tool'),rsel.get('Tool')]}
+    samples=(sample_relation(left_spec,right_spec,left.get('scope',{}),right.get('scope',{}),
+                             Path(left_base),Path(right_base),load_file)
+             if amber_pair else {'relation':'NOT_APPLICABLE'})
+    out['sample_comparison']=samples
+    sample_unknown=amber_pair and samples['relation']=='UNRESOLVED'
+    if sample_unknown:
+        out['reference_comparison']='NOT_COMPARED_UNRESOLVED_SAMPLE_IDENTITY'
+        missing(out,'pair.sample_ids',dict(left=samples['left'],right=samples['right'],
+                reason='No verified explicit sample correspondence.'),'comparability')
+    elif amber_pair and lref and rref:
+        if not same_eval:
+            out['reference_comparison'] = 'NOT_COMPARED_DIFFERENT_EVALUATED_MEMBERS'
+        elif lref['partition'] != rref['partition']:
+            out['reference_comparison'] = 'REFERENCE_PARTITION_CHANGED'
+            difference('actual_reference.partition', lref['partition'], rref['partition'])
+        elif lref['labelled'] != rref['labelled']:
+            out['reference_comparison'] = 'REFERENCE_IDS_CHANGED_SAME_PARTITION'
+            # Reference names identify scoring targets; no external crosswalk is assumed.
+            difference('actual_reference.labels', lref['labelled'], rref['labelled'])
+        else:
+            out['reference_comparison'] = 'SAME_LABELLED_REFERENCE_PARTITION'
+    elif left_adapter == right.get('adapter') == 'BER_DECOMPOSITION_V1':
+        out['reference_comparison'] = 'NOT_VERIFIABLE_AGGREGATE_ONLY'
+    same_submission = (intent=='REPLAY_SAME_SUBMISSION' if is_amber
                        else lsel.get('submission_id') == rsel.get('submission_id'))
-    if same_submission:
+    both_queries=amber_pair and not sample_unknown and same_eval and bool(lq and rq)
+    materially_different=bool(both_queries and
+        (lq['partition'] != rq['partition'] or lr.get('mapped_reference_by_contig')!=rr.get('mapped_reference_by_contig')))
+    purpose_unknown=amber_pair and (intent=='CONFLICTING_OR_INVALID' or (intent=='UNSPECIFIED' and materially_different))
+    if purpose_unknown:
+        missing(out,'pair.comparison_purpose',
+            'Distinguish replay of one submission from comparison of predictions. Tool display names are not submission IDs.','comparability')
+    if both_queries and lq['partition'] == rq['partition']:
+        out['candidate_name_comparison'] = ('UNCHANGED' if lq['labelled'] == rq['labelled']
+                                            else 'BIN_IDS_RENAMED_SAME_PARTITION')
+    if both_queries and same_submission:
+        difference('actual_query.partition', lq['partition'], rq['partition'])
+        difference('actual_mapped_reference_by_contig',lr.get('mapped_reference_by_contig'),rr.get('mapped_reference_by_contig'))
+    elif same_submission and not is_amber:
         difference('actual_target_maps', left.get('reconstruction', {}).get('target_maps'),
                    right.get('reconstruction', {}).get('target_maps'))
     lvalues = {x['field']: x for x in left.get('source_fields', [])}
@@ -583,10 +675,12 @@ def diagnose_artifact_pair(left_spec, right_spec, left_base=Path('.'), right_bas
     process = [x['process_artifact_completeness'] for x in (left, right)]
     out['process_artifact_completeness'] = ('INCOMPLETE' if 'INCOMPLETE' in process else
         'NOT_VERIFIABLE' if 'NOT_VERIFIABLE' in process else 'COMPLETE')
-    out['comparability'] = ('NOT_VERIFIABLE' if not membership_verified or any(
+    out['comparability'] = ('NOT_VERIFIABLE' if not membership_verified or sample_unknown or intent=='CONFLICTING_OR_INVALID' or any(
         x['comparability'] == 'NOT_VERIFIABLE' for x in (left, right)) else
         'NOT_DIRECTLY_COMPARABLE' if out['differences'] or any(
-        x['comparability'] == 'NOT_DIRECTLY_COMPARABLE' for x in (left, right)) else 'COMPARABLE')
+        x['comparability'] == 'NOT_DIRECTLY_COMPARABLE' for x in (left, right)) else
+        'NOT_VERIFIABLE' if purpose_unknown or out['reference_comparison'] != 'SAME_LABELLED_REFERENCE_PARTITION'
+        else 'COMPARABLE')
     invalid = out['input_validity'] == 'INVALID' or out['source_numerical_verification'] == 'MISMATCH'
     missing_evidence = out['comparability'] == 'NOT_VERIFIABLE' or out['source_numerical_verification'] == 'NOT_VERIFIABLE' or out['process_artifact_completeness'] != 'COMPLETE'
     out['validity'] = 'INVALID' if invalid else 'NOT_VERIFIABLE' if missing_evidence else 'VALID'

@@ -8,17 +8,16 @@ metric, a probability estimator or a biological validation method.
 
 ## Version and installation
 
-This public distribution packages **v0.3.2-candidate**. The four Python modules
-are unchanged from that candidate; publication updates documentation and licensing,
-not algorithms or scientific results. The publication tag is `v0.3.2-public.1`.
+This manuscript distribution contains **v0.3.4**. The historical GitHub tag
+`v0.3.2-public.1` identifies the earlier implementation, not this correction.
 
-Download the source from this repository's Releases page, or use **Code → Download
-ZIP**, extract it and open a terminal in the extracted source directory. Use
+Extract the v0.3.4 software archive included in Additional file 3 and open a
+terminal in the extracted source directory. Use
 Python 3; the recorded test environment was CPython 3.12.3 on Linux x86_64.
 The runtime uses only the Python standard library. No pip installation, AMBER,
 binner or reference database is required for the bundled synthetic examples.
-`ENVIRONMENT.json` records that historical test environment, not a newly run test
-or a bundled environment installer.
+`ENVIRONMENT.json` describes the tested runtime. The Python interpreter and
+third-party evaluator are not bundled.
 
 ```bash
 python -B diagnostic_cli.py --help
@@ -76,8 +75,11 @@ existing TSV rejection messages. It was informed by an observed validation case;
 later replays are regression checks, not new holdout evidence. The v0.3.2 repair
 guards string-only adapter handling: missing/null/non-string adapters retain the
 structured unsupported-adapter refusal instead of raising `AttributeError`.
-Neither repair changes the numerical or matching definitions. This publication
-does not add a new human trial, fresh independent validation or new experiments.
+Neither earlier repair changed numerical or matching definitions. Version 0.3.3
+uses AMBER 2.0.8's bp-selected reference for both units and its query-order rule
+for bp ties. Native comparisons check the filtered reference partition and
+separate membership changes from simple bin renaming. See the correction
+directory of the research companion for actual upstream outputs and paired controls.
 
 This is the diagnostic software distribution, not the complete research archive.
 It contains no raw CAMI data, sequencing data, retired labels, private validation

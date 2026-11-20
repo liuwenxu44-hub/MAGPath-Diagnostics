@@ -1,7 +1,9 @@
 {
-  "version": "0.3.2-candidate",
-  "publication_tag": "v0.3.2-public.1",
-  "code_changes": false,
+  "version": "0.3.4",
+  "distribution": "Additional file 3; not the historical GitHub release",
+  "parent_version": "0.3.3",
+  "parent_tag": "v0.3.2-public.1",
+  "amendment": "Receipt-to-result consistency; explicit sample and comparison identity; no change to numerical rules.",
   "files": [
     {
       "path": "alignment_diagnostics.py",
@@ -10,23 +12,24 @@
     },
     {
       "path": "diagnostic_cli.py",
-      "bytes": 32572,
-      "sha256": "252237190375deafac0e43df09beca4f4732212e762da1056df9e628ef88656a"
+      "bytes": 32741,
+      "sha256": "d7bb02ca0cd350dfaa016b6078cd116c33315eee8bf4e18a86999cf1c68b69cb"
+    },
+    {
+      "path": "evidence_identity.py",
+      "bytes": 7821,
+      "sha256": "d92e77241df152a0a3aeec8aab78ce8d31768fa9357228c2dc0537ff26db9c49"
     },
     {
       "path": "make_native_example.py",
-      "bytes": 2662,
-      "sha256": "29fc72c5709073cc750f8417ea8c8b659e572dc20f63f0f380a9b279598881d9"
+      "bytes": 2747,
+      "sha256": "2f3d52112b20e9186919a04652b0e3f2a84271353fe0ece4179eacae51713eb4"
     },
     {
       "path": "native_artifacts.py",
-      "bytes": 34684,
-      "sha256": "d4aa70c767c0a9967c925698862c4336a904a7930d30c3c649e65b1952d3fa95"
+      "bytes": 41043,
+      "sha256": "dce3f0c74d6d05ea4a2b90c4041137fd180882d979f91f92e2628fad6082bf68"
     }
   ],
-  "public_license_selected": true,
-  "public_distribution_authorized": true,
-  "new_scientific_analysis": false,
-  "historical_validation_regraded": false,
   "inventory": "SOURCE_INVENTORY.tsv"
 }

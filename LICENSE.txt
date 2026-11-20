@@ -7,7 +7,7 @@ Copyright (c) 2026 Wenxu Liu. All rights reserved except as expressly granted be
 
 This license applies only to the licensor-controlled MAGPath Diagnostics code,
 accompanying documentation, and self-authored synthetic examples identified in
-SOURCE_INVENTORY.tsv. The underlying software is v0.3.2-candidate. It does not
+SOURCE_INVENTORY.tsv. The underlying software is v0.3.4. It does not
 license third-party software, dependencies, research datasets, retired labels,
 private validation answers, personal information, or institutional trademarks.
 Third-party material remains governed by its own terms.

@@ -1,6 +1,10 @@
 # Read the conclusion, evidence scope and limitations together
 
-This guide applies prospectively to v0.3.2-candidate. It clarifies existing diagnostics; it is not a new scoring method or a reclassification of the original validation set.
+This guide describes v0.3.4. Use the companion's separately labelled historical replay for the original validation sets.
+
+Start with the question you actually asked. A correct number can survive a mixed-up receipt. Inspect `receipt_result_binding` before acting on a job: a recorded exit of 0 and the presence of the listed files do not identify their generating run. A conflicting receipt makes the process evidence incomplete; an unbound exit of 0 leaves completion unverified. Neither by itself invalidates a reconstructed number. A matching result digest establishes agreement with the supplied bytes, not the unique origin of identical outputs.
+
+In paired native AMBER output, `sample_comparison` shows the two native sample IDs. Different local namespaces need an explicit shared correspondence; equal contig labels alone are insufficient. `prediction_comparison` distinguishes comparing predictions from replaying one submission. Set both manifests to the same purpose, or give each a stable submission identifier. Changing only a tool display label cannot switch the decision. The native schema below describes the alias format and outcomes.
 
 1. Identify the interface. Generic `compare` is not the native four-axis `artifact` interface. Single-artifact checks do not prove a comparison to an unprovided second result. For actual native peers supply both `--spec` and `--reference-spec`.
 2. Read `input_validity` (or generic `validity`), comparability, numerical evidence and process evidence separately. A numerical match does not establish correct scope; matching scope does not establish correct numbers.
@@ -21,4 +25,4 @@ Examples of interpretation:
 
 The four axes are separate dimensions with shared gates, not statistically independent certificates. Every claim remains conditional on the supplied artifacts and implemented formulas. Unsupported adapters must be refused without pretending that their files were validated.
 
-This guide documents v0.3.2-candidate. Public availability and the accompanying license do not substitute for a human trial or establish scientific validity or journal readiness. The four diagnostic axes and all stated limitations remain applicable.
+For a pair of AMBER files, read `reference_comparison`. Different labelled reference assignments cannot be made equivalent by matching contig lengths. A changed reference partition and reference-name changes with identical partitions are reported separately. A pure candidate-bin rename leaves a comparable result comparable. If one side cannot supply the required membership, or only aggregates are available, the corresponding reference comparison is unverified.

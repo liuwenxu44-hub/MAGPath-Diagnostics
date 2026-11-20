@@ -1,6 +1,6 @@
 # Content and third-party notices
 
-The four Python files are project-authored MAGPath diagnostic code, including the
+The Python files listed in SOURCE_INVENTORY.tsv are project-authored MAGPath diagnostic code, including the
 unchanged earlier alignment helper. Documentation and the supplied examples are
 project documentation and self-authored synthetic material. Their distribution
 was authorized by Wenxu Liu, who identified himself as the rights holder.

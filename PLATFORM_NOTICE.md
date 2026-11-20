@@ -1,7 +1,8 @@
 # Public GitHub hosting
 
-The rights holder authorized publication of this software on GitHub. The unchanged
-custom license in `LICENSE.txt` governs the covered software and examples.
+The rights holder authorized GitHub publication of the preceding v0.3.2-public.1
+release. This manuscript supplies v0.3.4 in Additional file 3. The same custom
+license terms in `LICENSE.txt` govern its covered software and examples.
 
 GitHub's Terms of Service, section D (effective 27 April 2026, inspected
 4 November 2026), separately describe the permissions associated with hosting

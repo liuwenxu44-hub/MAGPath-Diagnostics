@@ -1,4 +1,4 @@
-# Native artifact manifest — v0.3.2-candidate
+# Native artifact manifest — v0.3.4
 
 Run `python -B diagnostic_cli.py artifact --spec manifest.json`. The implementation
 uses the Python standard library and writes JSON to stdout only. Relative paths
@@ -60,11 +60,12 @@ verify ratios. Duplicate hard assignments are rejected even if exact repeats;
 subtypes are SAME_BIN_REPEAT and CONFLICTING_ASSIGNMENT. This intentionally
 strict workflow contract is not a claim that AMBER cannot accept multiple bins.
 
-For each candidate bin, bp and sequence overlaps independently choose their
-largest truth overlap. Lexical truth ID breaks ties. Accuracy divides the sum
-of these maxima by filtered truth bp or records; precision divides by assigned
-bp or records. These two maps can differ. Aggregate agreement is a mechanical
-witness check, not authentic biological truth or host-assignment validation.
+For each candidate bin, select the reference with the largest total bp overlap.
+On a bp tie, take the first tied reference encountered in the retained query
+records. Count **both** the bp and contigs belonging to the selected reference.
+Accuracy divides those totals by filtered-universe bp or records; weighted
+precision divides by assigned bp or records. The ordinary BER decomposition
+uses its own frozen lexical tie rule, not AMBER's query-order rule.
 
 ## Existing BER decomposition TSV
 
@@ -102,14 +103,17 @@ optimization rule, population intersection or scientific ranking is introduced.
 
 ## Receipts, comparison and output
 
-Receipt is a JSON object with integer `exit_code`. A nonzero exit means source
-process incomplete, not automatic invalidation of finite numeric outputs.
+Receipt is a JSON object with integer `exit_code`. A nonzero recorded exit makes the process evidence incomplete, not the numerical results invalid. For a successful exit, COMPLETE requires both a closed required-file inventory and a match to the selected result bytes. A result binding can be `source_sha256` or an entry such as `{"name":"results.tsv","sha256":"..."}` in the source receipt's `artifacts` list. Use the original receipt; do not invent a retrospective job binding. The tool checks output digests, matching named witness digests in `input_sha256`, a declared AMBER minimum length, and supplied required-output statements. Other jobs in a multi-query receipt are not selected as witnesses. A foreign/contradictory receipt gives process INCOMPLETE; a bare successful exit gives NOT_VERIFIABLE. The recorded exit remains visible in both cases. This is not cryptographic authentication of a job or proof of causality.
 `required_artifacts` is a nonempty supplied closed list. Missing declared files
 or mismatched actual hashes make completeness INCOMPLETE. Missing receipt/list
 is NOT_VERIFIABLE. Optional `logs` descriptors are read and hashed; basename
 stdout/stderr is also reconciled with receipt stdout_sha256/stderr_sha256 when
 those keys exist. Hashes do not authenticate job/result association. Time expiry
 and origin authentication are unsupported; no timestamp implies freshness.
+
+For two AMBER records the literal native sample IDs must match unless both manifests give the same `sample_crosswalk` file descriptor. Its JSON has `dataset_id`, `family_id`, `assembly_id` matching both scopes, a nonempty `canonical_sample_id`, and a duplicate-free `sample_ids` list containing both native IDs. This is an explicit supplied correspondence, not an independently established biological identity.
+
+For a paired call optionally provide `"comparison":{"purpose":"COMPARE_PREDICTIONS"}` in both manifests, or use `REPLAY_SAME_SUBMISSION` in both. Alternatively, `comparison.submission_id` on both sides identifies the intent: equal stable IDs imply replay; distinct IDs imply comparison of predictions. Do not use a tool display label as a submission ID. Changing bin membership or the assigned reference is relevant to a same-submission replay, but a changed prediction is legitimate in a comparison of submissions on the same reference. Without either declaration, identical predictions require no purpose to establish comparability; when the decision would depend on purpose, the result is NOT_VERIFIABLE. Unresolved native samples cannot establish common membership even when local contig IDs match.
 
 Scope requires the same eight nonempty declaration fields as compare. Optional
 `reference_scope` contains those eight fields; differences produce
@@ -127,7 +131,15 @@ clarification, not a revision of old case expectations. For an actual pair, use 
 left.json --reference-spec right.json`. Each manifest is read independently and
 resolved against its own directory. Pair output embeds left/right audits and
 compares computed order-invariant universe/evaluation ID+length fingerprints,
-scope declarations, selected native fields and same-submission target maps.
+scope declarations and selected native fields. For matched evaluated members,
+AMBER peers compare the actual contig-to-reference assignments. A partition
+change differs from a change of reference names alone; without a reference-ID
+crosswalk either is reported as not directly comparable. A one-to-one rename of
+candidate bins alone, with identical membership and selected reference per
+contig, is informational. A changed same-submission target remains a difference.
+Aggregate-only BER evidence cannot establish equality of record-level reference
+partitions; absent another demonstrated difference, pair comparability is then
+NOT_VERIFIABLE. Single-artifact and per-field checks are unchanged in scope.
 Changing actual membership with identical scope labels is still a difference.
 If either membership witness is absent, pair comparability is NOT_VERIFIABLE.
 Changed finite source values alone are not a comparability failure.
