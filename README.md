@@ -1,103 +1,37 @@
 # MAGPath Diagnostics
 
-An evidence-scoped diagnostic layer for comparing metagenomic binning evaluations.
-It checks whether reported differences concern the same evaluated contigs,
-denominators and targets, and distinguishes valid numbers from an incomplete job.
-It complements evaluators such as AMBER; it is not a binner, a new evaluation
-metric, a probability estimator or a biological validation method.
+Equal contig counts do not mean two metagenomic binning evaluations scored the same sequences. MAGPath Diagnostics checks which contigs each result covers and how bins were matched to references before comparing the reported scores. It reads existing results; it does not run a binner or introduce a new accuracy metric.
 
-## Version and installation
+**[Download MAGPath Diagnostics v0.3.4](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/releases/download/v0.3.4/MAGPath_Diagnostics_v0.3.4.zip)**. This is the software ZIP supplied in Additional file 3 of the manuscript. Its checksum is on the [release page](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/releases/tag/v0.3.4). **Code → Download ZIP** on `main` gives you the [older v0.3.2 code](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/tree/v0.3.2-public.1), not the manuscript version.
 
-This public distribution packages **v0.3.2-candidate**. The four Python modules
-are unchanged from that candidate; publication updates documentation and licensing,
-not algorithms or scientific results. The publication tag is `v0.3.2-public.1`.
+## Try a comparison
 
-Download the source from this repository's Releases page, or use **Code → Download
-ZIP**, extract it and open a terminal in the extracted source directory. Use
-Python 3; the recorded test environment was CPython 3.12.3 on Linux x86_64.
-The runtime uses only the Python standard library. No pip installation, AMBER,
-binner or reference database is required for the bundled synthetic examples.
-`ENVIRONMENT.json` records that historical test environment, not a newly run test
-or a bundled environment installer.
+Extract the ZIP, then open a terminal in `MAGPath_Diagnostics_v0.3.4/`, the folder containing `diagnostic_cli.py`. The example runs with Python 3 (tested with CPython 3.12.3 on Linux) and the standard library. You do not need to install packages, run AMBER, or download data.
 
 ```bash
-python -B diagnostic_cli.py --help
-python -B diagnostic_cli.py --version
-python -B diagnostic_cli.py compare --left examples/left.json --right examples/right.json --universe examples/universe.tsv --config examples/config.json
-python -B diagnostic_cli.py account --records examples/account.tsv --universe examples/universe.tsv
-python -B diagnostic_cli.py event --spec examples/event.json
+python3 -B diagnostic_cli.py --version
+python3 -B diagnostic_cli.py compare \
+  --left examples/left.json --right examples/right.json \
+  --universe examples/universe.tsv --config examples/config.json
 ```
 
-For a self-contained native-shaped example:
+The first command prints `0.3.4`. In the synthetic example, both results cover the same two contigs (150 bp). Submission `s1` goes from 0.6 to 0.8, while `s2` stays at 0.7. Look for `"comparability": "COMPARABLE"` and `"STRICT_REVERSAL": 1` in the JSON: the two submissions switch rank on the same contigs. This command compares the supplied scores and bin-to-reference maps; it does not reconstruct the scores from reference assignments.
 
-```bash
-python -B make_native_example.py --output new_example_directory
-```
+## Use your own results
 
-Use a new output directory, then follow its README commands. This generator creates
-author-written synthetic artifacts; it does not run AMBER or download research
-data. It does not reproduce the original native-tool executions.
+| If you want to… | Use |
+| --- | --- |
+| Compare two sets of scores without assuming their denominators match | `compare`: supply two result JSON files and a separate list of contig IDs and lengths. See the [input formats](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/blob/v0.3.4/INPUT_SCHEMA.md). |
+| Account for every contig, including those omitted without a known reason | `account`: check the status and reason recorded for each contig against the full assembly list. An omission alone does not establish that the tool filtered the contig. |
+| Check whether a probability refers to the event being scored | `event`: supply the event, target and probabilities. It checks their stated support and calculates the Brier score. It does not estimate probabilities or compute the area under a risk–coverage curve. |
+| Check evaluator output against its source records | `artifact`: for AMBER 2.0.8, check six genome-binning fields against the supplied reference and query assignments. To compare two native results, provide both `--spec` and `--reference-spec`. See [supported files and fields](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/blob/v0.3.4/NATIVE_ARTIFACT_SCHEMA.md). |
 
-## Supply your own results
-
-- `compare`: two independently supplied result JSON files plus an independent
-  contig-ID/length universe. See [INPUT_SCHEMA.md](INPUT_SCHEMA.md).
-- `account`: reconcile assignment records and reasons against the entire universe.
-- `event`: check a declared event, probability support and Brier calculation.
-- `artifact`: read supported native result files and available independent
-  witnesses. For two native results supply both `--spec` and `--reference-spec`.
-  See [NATIVE_ARTIFACT_SCHEMA.md](NATIVE_ARTIFACT_SCHEMA.md).
-
-`diagnostic_cli.py` is the portable entry point. `alignment_diagnostics.py` also
-retains an earlier bounded posthoc helper with predefined family/policy labels;
-that helper is not the general-purpose input interface.
-
-## Interpret the output
-
-Read the diagnostic fields, not only the exit code. Native artifact reports
-separate input validity, comparability, numerical consistency and process/artifact
-completeness. Equal contig counts and bp totals do not establish equal membership.
-A valid number need not mean a reporting job completed. Missing witnesses cannot
-verify a scientific assertion. Generic and native interfaces have different
-supported checks, as described in [OUTPUT_INTERPRETATION_GUIDE.md](OUTPUT_INTERPRETATION_GUIDE.md).
-
-Exit 0 may accompany legitimate noncomparability; it is not universal PASS.
-Exit 2 signals invalid input/numerical inconsistency, and exit 3 signals unverified
-evidence or an incomplete process. `synthetic-demo` does not combine its nested
-reports into a diagnostic exit status. AURC is **not computed** by this version.
-No output establishes true host assignment, biological activity or clinical risk.
-Generated receipts can contain your local input paths and selected input fields;
-review them before sharing them publicly.
-
-## Version history and scope
-
-The v0.3.1 repair added duplicate-header names and one-based column locations to
-existing TSV rejection messages. It was informed by an observed validation case;
-later replays are regression checks, not new holdout evidence. The v0.3.2 repair
-guards string-only adapter handling: missing/null/non-string adapters retain the
-structured unsupported-adapter refusal instead of raising `AttributeError`.
-Neither repair changes the numerical or matching definitions. This publication
-does not add a new human trial, fresh independent validation or new experiments.
-
-This is the diagnostic software distribution, not the complete research archive.
-It contains no raw CAMI data, sequencing data, retired labels, private validation
-answers, participant records, AMBER distribution or third-party software bundle.
+A native report separates input validity, comparability, numerical agreement and evidence that the job finished. A score can agree with the source records even if a required report is missing. Two valid results can also return `NOT_DIRECTLY_COMPARABLE` with exit code 0. See the [guide to interpreting output](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/blob/v0.3.4/OUTPUT_INTERPRETATION_GUIDE.md).
 
 ## License and support
 
-Copyright © 2026 Wenxu Liu. Available without charge for noncommercial use under
-the [MAGPath Diagnostics Noncommercial No-Modification License 1.0](LICENSE.txt).
-No registration, individual permission request or material-transfer agreement is
-needed for permitted use. Modification, commercial use, sublicensing and onward
-distribution otherwise require separate written permission. This is a custom
-restricted-use license, **not an OSI open-source license**.
+You can run the unmodified software free of charge for noncommercial use, without registration. Modification, commercial use and redistribution require separate written permission, subject to the [license](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/blob/v0.3.4/LICENSE.txt) and [GitHub platform notice](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/blob/v0.3.4/PLATFORM_NOTICE.md). This is not an OSI open-source license. The ZIP contains author-written synthetic examples, not raw benchmark data or AMBER itself. See the [third-party notices](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/blob/v0.3.4/THIRD_PARTY_NOTICES.md).
 
-Public GitHub hosting also carries the platform rights described in
-[PLATFORM_NOTICE.md](PLATFORM_NOTICE.md), including viewing and forking through
-GitHub. These are distinct from a general permission to modify or commercially
-use the software. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and
-[SOURCE_INVENTORY.tsv](SOURCE_INVENTORY.tsv).
+For questions, [open an issue](https://github.com/liuwenxu44-hub/MAGPath-Diagnostics/issues). Remove private file paths and data from diagnostic output before sharing it.
 
-Questions may be raised through this repository's Issues page. Do not include
-private datasets, credentials or personal information in an issue. No support
-response time is promised. No published manuscript DOI is assigned here.
+Copyright © 2026 Wenxu Liu.
